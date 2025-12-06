@@ -29,8 +29,9 @@
     <Company>Beacon Tower</Company>
     <Product>BeaconTower.Events</Product>
     <Copyright>Copyright © Beacon Tower $([System.DateTime]::UtcNow.Year)</Copyright>
-    <PackageProjectUrl>https://github.com/beacontower/beacontower.events</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/beacontower/beacontower.events</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/beacontower/beacontower-events</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/beacontower/beacontower-events</RepositoryUrl>
+    <Version>0.1.0</Version>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>beacontower;library</PackageTags>
