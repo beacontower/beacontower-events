@@ -1,0 +1,196 @@
+{
+  "project": "BeaconTower.Events",
+  "created": "2025-12-06T16:46:00Z",
+  "harness_version": "1.0.0",
+  "notes": "Test definitions are IMMUTABLE. Agents cannot modify the 'tests' arrays. Must align with BeaconTower.Data.PostgreSql.Events interfaces.",
+  "alignment": {
+    "source": "BeaconTower.Data.PostgreSql.Events",
+    "interfaces": ["IEventPublisher", "EntityEvent", "EntityCreatedEvent<T>", "EntityUpdatedEvent<T>", "EntityDeletedEvent<T>"]
+  },
+  "features": [
+    {
+      "id": "feat-001",
+      "name": "Core Event Abstractions",
+      "description": "Re-export and extend BeaconTower.Data.PostgreSql.Events interfaces. Add IEventHandler<T>, EventMetadata, and DomainEvent base class. IEventPublisher constraint changed from EntityEvent to IEvent.",
+      "status": "pending",
+      "tests": [
+        "IEvent interface defines EventId (Guid), EventType (string), OccurredAt (DateTime)",
+        "EntityEvent implements IEvent with EntityId, EntityType, OccurredAt, UserId properties (aligned with Data.PostgreSql)",
+        "EventMetadata contains CorrelationId, UserId, UserName, and Source",
+        "IEventPublisher.PublishAsync<TEvent> accepts TEvent where TEvent : IEvent",
+        "IEventHandler<TEvent>.HandleAsync returns Task and accepts TEvent parameter",
+        "DomainEvent base class implements IEvent with auto-generated EventId and OccurredAt"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-002",
+      "name": "Entity Event Types",
+      "description": "EntityCreatedEvent<T>, EntityUpdatedEvent<T>, EntityDeletedEvent<T> aligned with BeaconTower.Data.PostgreSql structure",
+      "status": "pending",
+      "tests": [
+        "EntityCreatedEvent<T> contains Entity property with created entity snapshot",
+        "EntityUpdatedEvent<T> contains OldEntity, NewEntity, and ChangedProperties",
+        "EntityDeletedEvent<T> contains Entity property with deleted entity snapshot",
+        "All entity events inherit from EntityEvent base class",
+        "Entity events are compatible with BeaconTower.Data.PostgreSql.Entity constraint"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-003",
+      "name": "Subject Pattern Generator",
+      "description": "Subject pattern generation following {service}.{entityType}.{eventType} convention",
+      "status": "pending",
+      "tests": [
+        "Generates subject pattern {service}.{entityType}.created for EntityCreatedEvent",
+        "Generates subject pattern {service}.{entityType}.updated for EntityUpdatedEvent",
+        "Generates subject pattern {service}.{entityType}.deleted for EntityDeletedEvent",
+        "Generates subject pattern {service}.{domain}.{eventName} for domain events",
+        "Subject patterns are lowercase and dot-separated",
+        "Invalid characters in subject components throw ArgumentException"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-004",
+      "name": "In-Memory Publisher",
+      "description": "In-memory IEventPublisher implementation for unit testing",
+      "status": "pending",
+      "tests": [
+        "InMemoryEventPublisher implements IEventPublisher",
+        "PublishAsync stores event in internal collection",
+        "GetPublishedEvents<TEvent> returns all events of specified type",
+        "GetAllPublishedEvents returns all events regardless of type",
+        "Clear() removes all stored events",
+        "Thread-safe when publishing from multiple threads",
+        "Can replace NoOpEventPublisher from Data.PostgreSql in tests"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-005",
+      "name": "In-Memory Subscriber",
+      "description": "In-memory event subscriber for testing handler registration and delivery",
+      "status": "pending",
+      "tests": [
+        "InMemoryEventSubscriber can register handlers for event types",
+        "SimulateEvent<TEvent> delivers event to registered handlers",
+        "Multiple handlers for same event type all receive the event",
+        "Handler exceptions are captured and can be inspected",
+        "GetHandlerInvocations returns history of handler calls"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-006",
+      "name": "Configuration Options",
+      "description": "Publisher and subscriber configuration classes",
+      "status": "pending",
+      "tests": [
+        "EventPublisherOptions contains ConnectionString and ServiceName",
+        "EventPublisherOptions contains RetryPolicy with MaxRetries and exponential backoff",
+        "EventSubscriberOptions contains ConsumerGroupName for load balancing",
+        "EventSubscriberOptions contains MaxConcurrency and AckTimeout",
+        "EventSubscriberOptions contains MaxDeliveryAttempts before DLQ (default 3)",
+        "Options validation throws for missing required values"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-007",
+      "name": "JSON Serialization",
+      "description": "System.Text.Json serialization with source generators for AOT",
+      "status": "pending",
+      "tests": [
+        "Events serialize to JSON with camelCase property names",
+        "Events deserialize from JSON correctly preserving all properties",
+        "DateTime properties (OccurredAt, CreatedAt) use ISO 8601 format",
+        "Guid properties serialize as strings",
+        "JsonDocument Properties field from Entity serializes correctly",
+        "Source generator context available for AOT scenarios"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-008",
+      "name": "NATS JetStream Publisher",
+      "description": "NATS JetStream implementation of IEventPublisher",
+      "status": "pending",
+      "tests": [
+        "NatsEventPublisher implements IEventPublisher",
+        "PublishAsync sends message to correct NATS subject based on event type",
+        "EventMetadata (CorrelationId, UserId) included as NATS headers",
+        "Transient failures trigger retry with exponential backoff (max 3)",
+        "Connection pool reuses connections across publishes",
+        "Dispose properly closes all NATS connections",
+        "Timeout is respected and throws TimeoutException"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-009",
+      "name": "NATS JetStream Subscriber",
+      "description": "NATS JetStream durable subscriptions with consumer groups and DLQ",
+      "status": "pending",
+      "tests": [
+        "NatsEventSubscriber subscribes to specified subject patterns",
+        "Wildcard subscriptions (* single, > multiple) work correctly",
+        "Consumer group load-balances messages across service instances",
+        "Durable consumer survives service restart",
+        "Successful handler execution sends ACK to NATS",
+        "Handler exception sends NACK and triggers redelivery",
+        "Messages exceeding MaxDeliveryAttempts route to {subject}.dlq",
+        "MaxConcurrency limits parallel handler execution"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-010",
+      "name": "DI Registration Extensions",
+      "description": "ASP.NET Core dependency injection registration methods",
+      "status": "pending",
+      "tests": [
+        "AddBeaconTowerEvents registers core abstractions",
+        "AddNatsEventPublisher registers NatsEventPublisher as IEventPublisher",
+        "AddNatsEventSubscriber registers NatsEventSubscriber",
+        "AddEventHandler<TEvent, THandler> registers handler with scoped lifetime",
+        "AddInMemoryEvents registers in-memory implementations for testing",
+        "Configuration binding from IConfiguration section works",
+        "Replaces NoOpEventPublisher from Data.PostgreSql when registered"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-011",
+      "name": "Health Checks",
+      "description": "ASP.NET Core health checks for NATS connectivity",
+      "status": "pending",
+      "tests": [
+        "NatsHealthCheck reports Healthy when NATS connected",
+        "NatsHealthCheck reports Unhealthy when NATS disconnected",
+        "Health check includes connection latency in response data",
+        "AddNatsHealthCheck extension registers health check",
+        "Health check respects configured timeout"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    },
+    {
+      "id": "feat-012",
+      "name": "Observability",
+      "description": "Structured logging and Prometheus metrics",
+      "status": "pending",
+      "tests": [
+        "Publishing logs event type and subject at Debug level",
+        "Publishing logs CorrelationId for distributed tracing",
+        "Handler execution logs duration at Debug level",
+        "Handler failure logs exception at Error level",
+        "events_published_total counter increments on publish",
+        "events_processing_duration_seconds histogram records handler time",
+        "events_dlq_total counter increments on DLQ routing",
+        "Metrics include labels for event_type and subject"
+      ],
+      "createdAt": "2025-12-06T16:46:00Z"
+    }
+  ]
+}
