@@ -13,7 +13,7 @@ echo "Building solution..."
 dotnet build --no-restore
 
 echo "Running tests..."
-dotnet test --no-build --verbosity normal
+dotnet test --no-build
 
 echo "========================================="
 echo "Environment ready!"
