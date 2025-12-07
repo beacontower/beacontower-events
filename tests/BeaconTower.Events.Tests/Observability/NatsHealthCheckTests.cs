@@ -1,4 +1,5 @@
 using BeaconTower.Events.Observability;
+using BeaconTower.Observability;
 using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -49,7 +50,8 @@ public sealed class NatsHealthCheckTests : IAsyncLifetime
 
         // Assert
         result.Status.Should().Be(HealthStatus.Healthy);
-        result.Description.Should().Contain("RTT:");
+        result.Data.Should().ContainKey(HealthCheckBase.RttKey);
+        result.Data[HealthCheckBase.RttKey].Should().BeOfType<long>();
     }
 
     [Fact]

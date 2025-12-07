@@ -37,5 +37,8 @@
 
     <!-- SourceLink -->
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+
+    <!-- BeaconTower Shared Libraries -->
+    <PackageVersion Include="BeaconTower.Observability" Version="1.0.2" />
   </ItemGroup>
 </Project>

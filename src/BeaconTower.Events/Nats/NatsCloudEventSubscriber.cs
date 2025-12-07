@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using BeaconTower.Events.Abstractions;
 using BeaconTower.Events.Observability;
+using BeaconTower.Observability;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.SystemTextJson;
 using Microsoft.Extensions.Logging;
@@ -191,6 +192,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
         {
             CloudEvent? cloudEvent = null;
             string? correlationId = null;
+            Activity? activity = null;
 
             try
             {
@@ -204,6 +206,12 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
                 correlationId = cloudEvent.GetCorrelationId();
                 var eventId = cloudEvent.Id ?? "unknown";
                 var eventType = cloudEvent.Type ?? "unknown";
+
+                // Create Activity for distributed tracing
+                activity = ActivityExtensions.StartActivity("CloudEvents.Process", ActivityKind.Consumer);
+                activity?.AddTag("cloudevents.type", eventType);
+                activity?.AddTag("cloudevents.id", eventId);
+                activity?.AddTag("cloudevents.subject", msg.Subject);
 
                 using var scope = _logger.BeginScope(new Dictionary<string, object?>
                 {
@@ -229,9 +237,15 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
 
                 // Success - ACK the message
                 await msg.AckAsync(cancellationToken: ct).ConfigureAwait(false);
+
+                activity?.SetStatusOk();
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                // Record exception in activity
+                activity?.SetStatusError(ex.Message);
+                activity?.RecordException(ex);
+
                 // Handler failed - check if we should route to DLQ
                 var metadata = msg.Metadata;
                 var deliveryCount = (int)(metadata?.NumDelivered ?? 1);
@@ -257,6 +271,10 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
                     // NACK to trigger redelivery
                     await msg.NakAsync(cancellationToken: ct).ConfigureAwait(false);
                 }
+            }
+            finally
+            {
+                activity?.Dispose();
             }
         }
         finally

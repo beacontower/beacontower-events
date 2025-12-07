@@ -32,6 +32,11 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
   </ItemGroup>
 
+  <!-- BeaconTower Shared Libraries -->
+  <ItemGroup>
+    <PackageReference Include="BeaconTower.Observability" />
+  </ItemGroup>
+
   <!-- Include README in package -->
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />

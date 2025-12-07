@@ -1,5 +1,10 @@
 # Progress Log
 
+## Session 2025-12-07T20:30:00Z
+- Completed: feat-007, feat-008, feat-009, feat-010 (Observability Alignment) - All 126 tests passing
+- All features complete: 10/10 (100%)
+- Notes: Aligned beacontower-events with BeaconTower.Observability shared package (v1.0.2). Changes: (1) Added BeaconTower.Observability NuGet package reference from GitHub Packages feed. (2) CloudEventsMetrics now uses MeterFactory.Create("Events") for consistent meter naming. (3) NatsHealthCheck extends HealthCheckBase for standard RTT measurement (rtt_ms key), timeout handling (default 30s), and exception reporting. (4) Log.cs now uses LogEventIds constants (InfoBase, DebugBase, WarningBase, ErrorBase). (5) Added distributed tracing with ActivityExtensions: NatsCloudEventPublisher creates "CloudEvents.Publish" (Producer) activity, NatsCloudEventSubscriber creates "CloudEvents.Process" (Consumer) activity. Both include cloudevents.type, cloudevents.id, and cloudevents.subject tags.
+
 ## Session 2025-12-07T16:00:00Z
 - Completed: Harness extended for observability alignment
 - Next: feat-007 (Package Reference Integration)

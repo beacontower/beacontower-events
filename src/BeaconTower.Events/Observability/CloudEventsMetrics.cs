@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using BeaconTower.Observability;
 
 namespace BeaconTower.Events.Observability;
 
@@ -27,7 +28,7 @@ public sealed class CloudEventsMetrics : IDisposable
     /// </summary>
     public CloudEventsMetrics()
     {
-        _meter = new Meter(MeterName, "1.0.0");
+        _meter = MeterFactory.Create("Events");
 
         _eventsPublishedCounter = _meter.CreateCounter<long>(
             "events_published_total",

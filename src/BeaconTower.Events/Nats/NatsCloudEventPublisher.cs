@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using BeaconTower.Events.Abstractions;
 using BeaconTower.Events.Observability;
+using BeaconTower.Observability;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.SystemTextJson;
 using Microsoft.Extensions.Logging;
@@ -92,25 +94,42 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
         var eventType = cloudEvent.Type ?? "unknown";
         var eventId = cloudEvent.Id ?? "unknown";
 
+        // Create Activity for distributed tracing
+        using var activity = ActivityExtensions.StartActivity("CloudEvents.Publish", ActivityKind.Producer);
+        activity?.AddTag("cloudevents.type", eventType);
+        activity?.AddTag("cloudevents.subject", subject);
+        activity?.AddTag("cloudevents.id", eventId);
+
         Log.Publishing(_logger, eventType, subject);
 
-        await _resiliencePipeline.ExecuteAsync(async token =>
+        try
         {
-            // Structured Content Mode: serialize full CloudEvent as JSON
-            var payload = _formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            await _resiliencePipeline.ExecuteAsync(async token =>
+            {
+                // Structured Content Mode: serialize full CloudEvent as JSON
+                var payload = _formatter.EncodeStructuredModeMessage(cloudEvent, out _);
 
-            var ack = await _jetStream.PublishAsync(
-                subject,
-                payload,
-                cancellationToken: token).ConfigureAwait(false);
+                var ack = await _jetStream.PublishAsync(
+                    subject,
+                    payload,
+                    cancellationToken: token).ConfigureAwait(false);
 
-            ack.EnsureSuccess();
+                ack.EnsureSuccess();
 
-            // Record metric for successful publish
-            _metrics?.RecordEventPublished(eventType);
+                // Record metric for successful publish
+                _metrics?.RecordEventPublished(eventType);
 
-            Log.Published(_logger, eventId, subject, ack.Seq);
-        }, ct).ConfigureAwait(false);
+                Log.Published(_logger, eventId, subject, ack.Seq);
+            }, ct).ConfigureAwait(false);
+
+            activity?.SetStatusOk();
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatusError(ex.Message);
+            activity?.RecordException(ex);
+            throw;
+        }
     }
 
     /// <inheritdoc />

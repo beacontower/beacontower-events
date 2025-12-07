@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using BeaconTower.Observability;
 using Microsoft.Extensions.Options;
 using NATS.Client.Core;
 
@@ -8,9 +8,12 @@ namespace BeaconTower.Events.Observability;
 /// Health check for NATS connectivity.
 /// Reports Healthy when connected, Unhealthy when disconnected.
 /// </summary>
-public sealed class NatsHealthCheck : IHealthCheck, IAsyncDisposable
+/// <remarks>
+/// Extends <see cref="HealthCheckBase"/> for standard RTT measurement,
+/// timeout handling, and exception reporting patterns.
+/// </remarks>
+public sealed class NatsHealthCheck : HealthCheckBase, IAsyncDisposable
 {
-    private readonly NatsHealthCheckOptions _options;
     private readonly NatsConnection _connection;
     private bool _disposed;
 
@@ -18,51 +21,23 @@ public sealed class NatsHealthCheck : IHealthCheck, IAsyncDisposable
     /// Initializes a new instance of the <see cref="NatsHealthCheck"/> class.
     /// </summary>
     public NatsHealthCheck(IOptions<NatsHealthCheckOptions> options)
+        : base(options?.Value?.Timeout)
     {
         ArgumentNullException.ThrowIfNull(options);
-        _options = options.Value;
+        var opts = options.Value;
 
         var natsOpts = new NatsOpts
         {
-            Url = _options.ConnectionString
+            Url = opts.ConnectionString
         };
         _connection = new NatsConnection(natsOpts);
     }
 
     /// <inheritdoc />
-#pragma warning disable CA1031 // Catch Exception - Health checks must catch all exceptions to report Unhealthy status
-    public async Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context,
-        CancellationToken cancellationToken = default)
+    protected override async Task PerformHealthCheckAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            // Try to ping the NATS server
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(_options.Timeout);
-
-            var rtt = await _connection.PingAsync(cts.Token).ConfigureAwait(false);
-
-            return HealthCheckResult.Healthy($"NATS connection healthy. RTT: {rtt.TotalMilliseconds:F1}ms");
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (OperationCanceledException)
-        {
-            return HealthCheckResult.Unhealthy("NATS health check timed out");
-        }
-        catch (NatsException ex)
-        {
-            return HealthCheckResult.Unhealthy($"NATS connection unhealthy: {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            return HealthCheckResult.Unhealthy($"NATS health check failed: {ex.Message}", ex);
-        }
+        await _connection.PingAsync(cancellationToken).ConfigureAwait(false);
     }
-#pragma warning restore CA1031
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
@@ -89,6 +64,7 @@ public class NatsHealthCheckOptions
 
     /// <summary>
     /// The timeout for the health check ping.
+    /// If not specified, uses <see cref="HealthCheckBase.DefaultTimeout"/> (30 seconds).
     /// </summary>
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan? Timeout { get; set; }
 }

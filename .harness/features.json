@@ -119,7 +119,9 @@
       "id": "feat-007",
       "name": "Package Reference Integration",
       "description": "Add BeaconTower.Observability package reference to align with shared observability patterns.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T19:50:00Z",
+      "completedAt": "2025-12-07T20:00:00Z",
       "tests": [
         "BeaconTower.Observability package is referenced in BeaconTower.Events.csproj",
         "Package version is defined in Directory.Packages.props",
@@ -131,7 +133,9 @@
       "id": "feat-008",
       "name": "MeterFactory Alignment",
       "description": "Refactor CloudEventsMetrics to use MeterFactory.Create() from BeaconTower.Observability.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T20:00:00Z",
+      "completedAt": "2025-12-07T20:05:00Z",
       "tests": [
         "CloudEventsMetrics uses MeterFactory.Create(\"Events\") instead of new Meter()",
         "Meter name is still \"BeaconTower.Events\" (verified by existing tests)",
@@ -143,7 +147,9 @@
       "id": "feat-009",
       "name": "HealthCheckBase Integration",
       "description": "Refactor NatsHealthCheck to extend HealthCheckBase for consistent patterns.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T20:05:00Z",
+      "completedAt": "2025-12-07T20:15:00Z",
       "tests": [
         "NatsHealthCheck extends HealthCheckBase",
         "PerformHealthCheckAsync implementation calls _connection.PingAsync",
@@ -157,7 +163,9 @@
       "id": "feat-010",
       "name": "LogEventIds and Activity Tracing",
       "description": "Use LogEventIds constants and add distributed tracing with ActivityExtensions.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T20:15:00Z",
+      "completedAt": "2025-12-07T20:30:00Z",
       "tests": [
         "Log.cs uses LogEventIds.InfoBase, DebugBase, WarningBase, ErrorBase constants",
         "Event IDs maintain same values (1001, 2001, 3001, 4001 ranges)",
