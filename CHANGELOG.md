@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/beacontower/beacontower-events/compare/v0.2.0...v0.3.0) (2025-12-07)
+
+
+### Features
+
+* Align observability with BeaconTower.Observability shared package ([4fbc84a](https://github.com/beacontower/beacontower-events/commit/4fbc84a51fb616986acd6533ecaef89fcf65bd81))
+
 # [0.2.0](https://github.com/beacontower/beacontower-events/compare/v0.1.0...v0.2.0) (2025-12-07)
 
 
