@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace BeaconTower.Events.Nats;
 
 /// <summary>
@@ -6,9 +8,15 @@ namespace BeaconTower.Events.Nats;
 public class NatsCloudEventSubscriberOptions
 {
     /// <summary>
+    /// The configuration section name for binding.
+    /// </summary>
+    public const string SectionName = "BeaconTower:Events:Nats:Subscriber";
+
+    /// <summary>
     /// Gets or sets the NATS connection string.
     /// Default: "nats://localhost:4222"
     /// </summary>
+    [Required(ErrorMessage = "ConnectionString is required")]
     public string ConnectionString { get; set; } = "nats://localhost:4222";
 
     /// <summary>
@@ -21,6 +29,7 @@ public class NatsCloudEventSubscriberOptions
     /// Gets or sets the service name used for consumer naming.
     /// This is used to create durable consumer names and consumer groups.
     /// </summary>
+    [Required(ErrorMessage = "ServiceName is required")]
     public string ServiceName { get; set; } = string.Empty;
 
     /// <summary>

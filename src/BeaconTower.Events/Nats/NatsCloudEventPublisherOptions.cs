@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace BeaconTower.Events.Nats;
 
 /// <summary>
@@ -6,9 +8,15 @@ namespace BeaconTower.Events.Nats;
 public class NatsCloudEventPublisherOptions
 {
     /// <summary>
+    /// The configuration section name for binding.
+    /// </summary>
+    public const string SectionName = "BeaconTower:Events:Nats:Publisher";
+
+    /// <summary>
     /// Gets or sets the NATS connection string.
     /// Default: "nats://localhost:4222"
     /// </summary>
+    [Required(ErrorMessage = "ConnectionString is required")]
     public string ConnectionString { get; set; } = "nats://localhost:4222";
 
     /// <summary>

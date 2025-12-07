@@ -1,5 +1,10 @@
 # Progress Log
 
+## Session 2025-12-07T13:45:00Z
+- Completed: feat-005 (DI Registration Extensions) - All 105 tests passing
+- Next: feat-006 (Observability)
+- Notes: Created ServiceCollectionExtensions with AddNatsCloudEventPublisher, AddNatsCloudEventSubscriber, AddInMemoryCloudEvents, and AddCloudEventHandler<TData, THandler>. Configuration binding supports IConfiguration sections. Options validation with DataAnnotations ([Required] on ConnectionString and ServiceName). Added Microsoft.Extensions.Options.DataAnnotations and related packages. 8 new unit tests covering all 6 test requirements.
+
 ## Session 2025-12-07T13:00:00Z
 - Completed: feat-004 (NATS CloudEvents Subscription) - All 97 tests passing
 - Next: feat-005 (DI Registration Extensions)
