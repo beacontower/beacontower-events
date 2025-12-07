@@ -114,6 +114,60 @@
         "AddNatsHealthCheck extension registers health check with ASP.NET Core"
       ],
       "createdAt": "2025-12-06T17:30:00Z"
+    },
+    {
+      "id": "feat-007",
+      "name": "Package Reference Integration",
+      "description": "Add BeaconTower.Observability package reference to align with shared observability patterns.",
+      "status": "pending",
+      "tests": [
+        "BeaconTower.Observability package is referenced in BeaconTower.Events.csproj",
+        "Package version is defined in Directory.Packages.props",
+        "Project builds successfully with new reference"
+      ],
+      "createdAt": "2025-12-07T16:00:00Z"
+    },
+    {
+      "id": "feat-008",
+      "name": "MeterFactory Alignment",
+      "description": "Refactor CloudEventsMetrics to use MeterFactory.Create() from BeaconTower.Observability.",
+      "status": "pending",
+      "tests": [
+        "CloudEventsMetrics uses MeterFactory.Create(\"Events\") instead of new Meter()",
+        "Meter name is still \"BeaconTower.Events\" (verified by existing tests)",
+        "All existing metrics tests still pass"
+      ],
+      "createdAt": "2025-12-07T16:00:00Z"
+    },
+    {
+      "id": "feat-009",
+      "name": "HealthCheckBase Integration",
+      "description": "Refactor NatsHealthCheck to extend HealthCheckBase for consistent patterns.",
+      "status": "pending",
+      "tests": [
+        "NatsHealthCheck extends HealthCheckBase",
+        "PerformHealthCheckAsync implementation calls _connection.PingAsync",
+        "Health check result includes rtt_ms key from base class",
+        "Timeout handling uses base class pattern (default 30s)",
+        "All existing health check tests still pass"
+      ],
+      "createdAt": "2025-12-07T16:00:00Z"
+    },
+    {
+      "id": "feat-010",
+      "name": "LogEventIds and Activity Tracing",
+      "description": "Use LogEventIds constants and add distributed tracing with ActivityExtensions.",
+      "status": "pending",
+      "tests": [
+        "Log.cs uses LogEventIds.InfoBase, DebugBase, WarningBase, ErrorBase constants",
+        "Event IDs maintain same values (1001, 2001, 3001, 4001 ranges)",
+        "NatsCloudEventPublisher creates Activity span for publish operations",
+        "Publisher Activity has cloudevents.type and cloudevents.subject tags",
+        "NatsCloudEventSubscriber creates Activity span for message processing",
+        "Subscriber Activity has cloudevents.type and cloudevents.id tags",
+        "Activity uses ActivitySource from ActivityExtensions.Source (name: BeaconTower)"
+      ],
+      "createdAt": "2025-12-07T16:00:00Z"
     }
   ]
 }
