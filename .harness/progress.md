@@ -1,5 +1,10 @@
 # Progress Log
 
+## Session 2025-12-07T13:00:00Z
+- Completed: feat-004 (NATS CloudEvents Subscription) - All 97 tests passing
+- Next: feat-005 (DI Registration Extensions)
+- Notes: Implemented NatsCloudEventSubscriber with JetStream durable consumers. Features: wildcard subscriptions (* and >) using native NATS filter subjects, consumer groups via shared durable consumer names per service, explicit ACK on success, NACK with redelivery on failure, DLQ routing after MaxDeliveryAttempts, SemaphoreSlim for MaxConcurrency limit. 10 new integration tests with Testcontainers.Nats.
+
 ## Session 2025-12-07T11:30:00Z
 - Completed: feat-003 (NATS CloudEvents Publishing) - All 87 tests passing
 - Next: feat-004 (NATS CloudEvents Subscription)

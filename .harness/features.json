@@ -63,7 +63,9 @@
       "id": "feat-004",
       "name": "NATS CloudEvents Subscription",
       "description": "Implement event subscription with NATS JetStream durable consumers and consumer groups.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T12:30:00Z",
+      "completedAt": "2025-12-07T13:00:00Z",
       "tests": [
         "NatsCloudEventSubscriber implements ICloudEventSubscriber",
         "SubscribeAsync creates durable consumer that survives service restarts",
