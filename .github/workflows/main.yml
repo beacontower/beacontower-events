@@ -56,6 +56,7 @@ jobs:
     if: needs.semantic-release.outputs.new-release-published == 'true'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
 
     steps:
@@ -70,10 +71,14 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
         env:
-          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use GH_PACKAGES_TOKEN (PAT with read:packages) for reading cross-repo packages
+          # Falls back to GITHUB_TOKEN if not set
+          NUGET_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Pack library
         run: dotnet pack src/BeaconTower.Events/BeaconTower.Events.csproj --configuration Release --output ./artifacts -p:PackageVersion=${{ needs.semantic-release.outputs.new-release-version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Publish to GitHub Packages
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
