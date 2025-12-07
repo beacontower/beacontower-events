@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/beacontower/beacontower-events/compare/v0.3.0...v0.3.1) (2025-12-07)
+
+
+### Bug Fixes
+
+* **ci:** Add GH_PACKAGES_TOKEN for cross-repo package access ([d6b9586](https://github.com/beacontower/beacontower-events/commit/d6b958694c69ac47d4ce111ac363aa355e6346c5))
+
 # [0.3.0](https://github.com/beacontower/beacontower-events/compare/v0.2.0...v0.3.0) (2025-12-07)
 
 
