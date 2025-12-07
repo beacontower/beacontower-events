@@ -28,7 +28,9 @@
       "id": "feat-002",
       "name": "In-Memory Implementation",
       "description": "Provide in-memory CloudEvents publisher and subscriber for unit tests. Package: BeaconTower.Events.InMemory",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T09:15:00Z",
+      "completedAt": "2025-12-07T09:30:00Z",
       "tests": [
         "InMemoryCloudEventPublisher stores CloudEvent instances in memory",
         "InMemoryCloudEventPublisher.PublishedEvents returns all published CloudEvents",
