@@ -18,7 +18,7 @@ public class CloudEventExtensionsTests
         cloudEvent.SetCorrelationId(correlationId);
 
         // Assert
-        cloudEvent[CloudEventExtensions.CorrelationId].Should().Be(correlationId);
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId].Should().Be(correlationId);
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class CloudEventExtensionsTests
         // Arrange
         var cloudEvent = CreateTestCloudEvent();
         var correlationId = "test-correlation-456";
-        cloudEvent[CloudEventExtensions.CorrelationId] = correlationId;
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId] = correlationId;
 
         // Act
         var result = cloudEvent.GetCorrelationId();
@@ -59,8 +59,8 @@ public class CloudEventExtensionsTests
         // Act
         cloudEvent.SetUserId(userId);
 
-        // Assert - stored as string due to CloudEvents SDK limitations
-        cloudEvent[CloudEventExtensions.UserId].Should().Be(userId.ToString());
+        // Assert - stored as binary (16 bytes) for efficiency
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId].Should().BeEquivalentTo(userId.ToByteArray());
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class CloudEventExtensionsTests
         // Arrange
         var cloudEvent = CreateTestCloudEvent();
         var userId = Guid.NewGuid();
-        cloudEvent[CloudEventExtensions.UserId] = userId.ToString();
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId] = userId.ToByteArray();
 
         // Act
         var result = cloudEvent.GetUserId();
@@ -96,7 +96,8 @@ public class CloudEventExtensionsTests
     {
         // Arrange
         var cloudEvent = CreateTestCloudEvent();
-        cloudEvent[CloudEventExtensions.UserId] = "not-a-guid";
+        // Set invalid binary data (wrong length)
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId] = new byte[] { 1, 2, 3 };
 
         // Act
         var result = cloudEvent.GetUserId();
@@ -116,7 +117,7 @@ public class CloudEventExtensionsTests
         cloudEvent.SetUserName(userName);
 
         // Assert
-        cloudEvent[CloudEventExtensions.UserName].Should().Be(userName);
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName].Should().Be(userName);
     }
 
     [Fact]
@@ -125,7 +126,7 @@ public class CloudEventExtensionsTests
         // Arrange
         var cloudEvent = CreateTestCloudEvent();
         var userName = "jane@example.com";
-        cloudEvent[CloudEventExtensions.UserName] = userName;
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName] = userName;
 
         // Act
         var result = cloudEvent.GetUserName();
@@ -178,7 +179,7 @@ public class CloudEventExtensionsTests
         cloudEvent.SetCorrelationId(null);
 
         // Assert
-        cloudEvent[CloudEventExtensions.CorrelationId].Should().BeNull();
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId].Should().BeNull();
     }
 
     [Fact]
@@ -191,7 +192,7 @@ public class CloudEventExtensionsTests
         cloudEvent.SetUserId(null);
 
         // Assert
-        cloudEvent[CloudEventExtensions.UserId].Should().BeNull();
+        cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId].Should().BeNull();
     }
 
     [Fact]
@@ -211,7 +212,10 @@ public class CloudEventExtensionsTests
 
     private static CloudEvent CreateTestCloudEvent()
     {
-        return new CloudEvent
+        // Create CloudEvent with registered BeaconTower extension attributes
+        return new CloudEvent(
+            CloudEventsSpecVersion.V1_0,
+            BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = Guid.NewGuid().ToString(),
             Source = new Uri("//beacontower/test", UriKind.RelativeOrAbsolute),

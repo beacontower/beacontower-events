@@ -3,25 +3,11 @@ using CloudNative.CloudEvents;
 namespace BeaconTower.Events.Abstractions;
 
 /// <summary>
-/// BeaconTower extension attributes for CloudEvents.
+/// Extension methods for accessing BeaconTower CloudEvent extension attributes.
+/// Uses the registered <see cref="BeaconTowerCloudEventExtensionAttributes"/> for type safety.
 /// </summary>
 public static class CloudEventExtensions
 {
-    /// <summary>
-    /// Extension attribute name for correlation ID (distributed tracing).
-    /// </summary>
-    public const string CorrelationId = "correlationid";
-
-    /// <summary>
-    /// Extension attribute name for user ID.
-    /// </summary>
-    public const string UserId = "userid";
-
-    /// <summary>
-    /// Extension attribute name for user name.
-    /// </summary>
-    public const string UserName = "username";
-
     /// <summary>
     /// Gets the correlation ID from a CloudEvent.
     /// </summary>
@@ -30,7 +16,7 @@ public static class CloudEventExtensions
     public static string? GetCorrelationId(this CloudEvent cloudEvent)
     {
         ArgumentNullException.ThrowIfNull(cloudEvent);
-        return cloudEvent[CorrelationId]?.ToString();
+        return cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId] as string;
     }
 
     /// <summary>
@@ -44,7 +30,7 @@ public static class CloudEventExtensions
         ArgumentNullException.ThrowIfNull(cloudEvent);
         if (!string.IsNullOrWhiteSpace(correlationId))
         {
-            cloudEvent[CorrelationId] = correlationId;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId] = correlationId;
         }
         return cloudEvent;
     }
@@ -57,12 +43,11 @@ public static class CloudEventExtensions
     public static Guid? GetUserId(this CloudEvent cloudEvent)
     {
         ArgumentNullException.ThrowIfNull(cloudEvent);
-        var value = cloudEvent[UserId];
+        var value = cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId];
 
         return value switch
         {
-            Guid guid => guid,
-            string str when Guid.TryParse(str, out var parsed) => parsed,
+            byte[] bytes when bytes.Length == 16 => new Guid(bytes),
             _ => null
         };
     }
@@ -78,8 +63,8 @@ public static class CloudEventExtensions
         ArgumentNullException.ThrowIfNull(cloudEvent);
         if (userId.HasValue)
         {
-            // CloudEvents extension attributes require string values for unregistered attributes
-            cloudEvent[UserId] = userId.Value.ToString();
+            // Store as binary (16 bytes) for efficiency - no string allocation
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId] = userId.Value.ToByteArray();
         }
         return cloudEvent;
     }
@@ -92,7 +77,7 @@ public static class CloudEventExtensions
     public static string? GetUserName(this CloudEvent cloudEvent)
     {
         ArgumentNullException.ThrowIfNull(cloudEvent);
-        return cloudEvent[UserName]?.ToString();
+        return cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName] as string;
     }
 
     /// <summary>
@@ -106,7 +91,7 @@ public static class CloudEventExtensions
         ArgumentNullException.ThrowIfNull(cloudEvent);
         if (!string.IsNullOrWhiteSpace(userName))
         {
-            cloudEvent[UserName] = userName;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName] = userName;
         }
         return cloudEvent;
     }

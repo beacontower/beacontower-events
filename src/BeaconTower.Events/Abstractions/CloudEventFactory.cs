@@ -8,6 +8,7 @@ namespace BeaconTower.Events.Abstractions;
 public class CloudEventFactory : ICloudEventFactory
 {
     private readonly CloudEventFactoryOptions _options;
+    private readonly Uri _source;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventFactory"/> class.
@@ -19,6 +20,8 @@ public class CloudEventFactory : ICloudEventFactory
         ArgumentException.ThrowIfNullOrWhiteSpace(options.ServiceName);
 
         _options = options;
+        // Cache the source URI to avoid parsing on every event creation
+        _source = new Uri($"//beacontower/{_options.ServiceName}", UriKind.RelativeOrAbsolute);
     }
 
     /// <inheritdoc />
@@ -35,10 +38,13 @@ public class CloudEventFactory : ICloudEventFactory
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(subject);
 
-        var cloudEvent = new CloudEvent
+        // Create CloudEvent with registered BeaconTower extension attributes
+        var cloudEvent = new CloudEvent(
+            CloudEventsSpecVersion.V1_0,
+            BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = Guid.CreateVersion7().ToString(),
-            Source = new Uri($"//beacontower/{_options.ServiceName}", UriKind.RelativeOrAbsolute),
+            Source = _source,
             Type = CloudEventTypeGenerator.Generate(entityType, action),
             Time = DateTimeOffset.UtcNow,
             DataContentType = "application/json",
@@ -46,21 +52,21 @@ public class CloudEventFactory : ICloudEventFactory
             Data = data
         };
 
-        // Add BeaconTower extension attributes (stored as typed objects, not strings)
+        // Set BeaconTower extension attributes using registered attribute definitions
         if (!string.IsNullOrWhiteSpace(correlationId))
         {
-            cloudEvent[CloudEventExtensions.CorrelationId] = correlationId;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId] = correlationId;
         }
 
         if (userId.HasValue)
         {
-            // CloudEvents extension attributes require string values for unregistered attributes
-            cloudEvent[CloudEventExtensions.UserId] = userId.Value.ToString();
+            // Store as binary (16 bytes) for efficiency - no string allocation
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId] = userId.Value.ToByteArray();
         }
 
         if (!string.IsNullOrWhiteSpace(userName))
         {
-            cloudEvent[CloudEventExtensions.UserName] = userName;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName] = userName;
         }
 
         return cloudEvent;
@@ -78,10 +84,13 @@ public class CloudEventFactory : ICloudEventFactory
         ArgumentException.ThrowIfNullOrWhiteSpace(type);
         ArgumentException.ThrowIfNullOrWhiteSpace(subject);
 
-        var cloudEvent = new CloudEvent
+        // Create CloudEvent with registered BeaconTower extension attributes
+        var cloudEvent = new CloudEvent(
+            CloudEventsSpecVersion.V1_0,
+            BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = Guid.CreateVersion7().ToString(),
-            Source = new Uri($"//beacontower/{_options.ServiceName}", UriKind.RelativeOrAbsolute),
+            Source = _source,
             Type = type,
             Time = DateTimeOffset.UtcNow,
             DataContentType = "application/json",
@@ -89,21 +98,21 @@ public class CloudEventFactory : ICloudEventFactory
             Data = data
         };
 
-        // Add BeaconTower extension attributes (stored as typed objects, not strings)
+        // Set BeaconTower extension attributes using registered attribute definitions
         if (!string.IsNullOrWhiteSpace(correlationId))
         {
-            cloudEvent[CloudEventExtensions.CorrelationId] = correlationId;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.CorrelationId] = correlationId;
         }
 
         if (userId.HasValue)
         {
-            // CloudEvents extension attributes require string values for unregistered attributes
-            cloudEvent[CloudEventExtensions.UserId] = userId.Value.ToString();
+            // Store as binary (16 bytes) for efficiency - no string allocation
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserId] = userId.Value.ToByteArray();
         }
 
         if (!string.IsNullOrWhiteSpace(userName))
         {
-            cloudEvent[CloudEventExtensions.UserName] = userName;
+            cloudEvent[BeaconTowerCloudEventExtensionAttributes.UserName] = userName;
         }
 
         return cloudEvent;
