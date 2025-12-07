@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/beacontower/beacontower-events/compare/v0.1.0...v0.2.0) (2025-12-07)
+
+
+### Features
+
+* initialize CloudEvents-based harness for BeaconTower.Events ([2f9a6d0](https://github.com/beacontower/beacontower-events/commit/2f9a6d047da6fa7b487493ed07eeddab8a0c8f4f))
+
 ## [1.0.1](https://github.com/beacontower/beacontower-lib-template/compare/v1.0.0...v1.0.1) (2025-11-21)
 
 
