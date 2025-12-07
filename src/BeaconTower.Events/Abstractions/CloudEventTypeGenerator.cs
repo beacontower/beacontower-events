@@ -2,21 +2,21 @@ namespace BeaconTower.Events.Abstractions;
 
 /// <summary>
 /// Generates CloudEvents type strings following BeaconTower conventions.
-/// Pattern: com.beacontower.{entity}.{action}
+/// Pattern: cloud.beacontower.{entity}.{action}
 /// </summary>
 public static class CloudEventTypeGenerator
 {
     /// <summary>
     /// The BeaconTower CloudEvents type prefix.
     /// </summary>
-    public const string TypePrefix = "com.beacontower";
+    public const string TypePrefix = "cloud.beacontower";
 
     /// <summary>
     /// Generates a CloudEvents type string for the given entity and action.
     /// </summary>
     /// <param name="entityType">The entity type (e.g., "device", "user", "alarm").</param>
     /// <param name="action">The action (e.g., "created", "updated", "deleted").</param>
-    /// <returns>The CloudEvents type string (e.g., "com.beacontower.device.created").</returns>
+    /// <returns>The CloudEvents type string (e.g., "cloud.beacontower.device.created").</returns>
     #pragma warning disable CA1308 // Normalize strings to uppercase - CloudEvents type convention is lowercase
     public static string Generate(string entityType, string action)
     {
@@ -31,21 +31,21 @@ public static class CloudEventTypeGenerator
     /// Generates a CloudEvents type string for an entity created event.
     /// </summary>
     /// <param name="entityType">The entity type.</param>
-    /// <returns>The CloudEvents type string (e.g., "com.beacontower.device.created").</returns>
+    /// <returns>The CloudEvents type string (e.g., "cloud.beacontower.device.created").</returns>
     public static string Created(string entityType) => Generate(entityType, "created");
 
     /// <summary>
     /// Generates a CloudEvents type string for an entity updated event.
     /// </summary>
     /// <param name="entityType">The entity type.</param>
-    /// <returns>The CloudEvents type string (e.g., "com.beacontower.device.updated").</returns>
+    /// <returns>The CloudEvents type string (e.g., "cloud.beacontower.device.updated").</returns>
     public static string Updated(string entityType) => Generate(entityType, "updated");
 
     /// <summary>
     /// Generates a CloudEvents type string for an entity deleted event.
     /// </summary>
     /// <param name="entityType">The entity type.</param>
-    /// <returns>The CloudEvents type string (e.g., "com.beacontower.device.deleted").</returns>
+    /// <returns>The CloudEvents type string (e.g., "cloud.beacontower.device.deleted").</returns>
     public static string Deleted(string entityType) => Generate(entityType, "deleted");
 
     /// <summary>
@@ -66,7 +66,7 @@ public static class CloudEventTypeGenerator
         }
 
         var parts = cloudEventType.Split('.');
-        if (parts.Length < 4 || parts[0] != "com" || parts[1] != "beacontower")
+        if (parts.Length < 4 || parts[0] != "cloud" || parts[1] != "beacontower")
         {
             return false;
         }

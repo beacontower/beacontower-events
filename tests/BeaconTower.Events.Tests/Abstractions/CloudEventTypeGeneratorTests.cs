@@ -13,13 +13,13 @@ public class CloudEventTypeGeneratorTests
         var result = CloudEventTypeGenerator.Generate("device", "created");
 
         // Assert
-        result.Should().Be("com.beacontower.device.created");
+        result.Should().Be("cloud.beacontower.device.created");
     }
 
     [Theory]
-    [InlineData("Device", "Created", "com.beacontower.device.created")]
-    [InlineData("USER", "LOGGED_IN", "com.beacontower.user.logged_in")]
-    [InlineData("Alarm", "Triggered", "com.beacontower.alarm.triggered")]
+    [InlineData("Device", "Created", "cloud.beacontower.device.created")]
+    [InlineData("USER", "LOGGED_IN", "cloud.beacontower.user.logged_in")]
+    [InlineData("Alarm", "Triggered", "cloud.beacontower.alarm.triggered")]
     public void Generate_Should_Normalize_To_Lowercase(string entityType, string action, string expected)
     {
         // Act
@@ -36,7 +36,7 @@ public class CloudEventTypeGeneratorTests
         var result = CloudEventTypeGenerator.Created("device");
 
         // Assert
-        result.Should().Be("com.beacontower.device.created");
+        result.Should().Be("cloud.beacontower.device.created");
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class CloudEventTypeGeneratorTests
         var result = CloudEventTypeGenerator.Updated("device");
 
         // Assert
-        result.Should().Be("com.beacontower.device.updated");
+        result.Should().Be("cloud.beacontower.device.updated");
     }
 
     [Fact]
@@ -56,14 +56,14 @@ public class CloudEventTypeGeneratorTests
         var result = CloudEventTypeGenerator.Deleted("device");
 
         // Assert
-        result.Should().Be("com.beacontower.device.deleted");
+        result.Should().Be("cloud.beacontower.device.deleted");
     }
 
     [Fact]
     public void TryParse_Should_Extract_EntityType_And_Action()
     {
         // Arrange
-        var cloudEventType = "com.beacontower.device.created";
+        var cloudEventType = "cloud.beacontower.device.created";
 
         // Act
         var success = CloudEventTypeGenerator.TryParse(cloudEventType, out var entityType, out var action);

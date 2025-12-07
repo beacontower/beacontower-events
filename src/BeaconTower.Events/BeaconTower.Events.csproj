@@ -17,6 +17,13 @@
     <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" />
   </ItemGroup>
 
+  <!-- NATS JetStream Dependencies -->
+  <ItemGroup>
+    <PackageReference Include="NATS.Net" />
+    <PackageReference Include="Microsoft.Extensions.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
   <!-- Include README in package -->
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />

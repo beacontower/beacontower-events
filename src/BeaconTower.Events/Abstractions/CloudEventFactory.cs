@@ -21,7 +21,7 @@ public class CloudEventFactory : ICloudEventFactory
 
         _options = options;
         // Cache the source URI to avoid parsing on every event creation
-        _source = new Uri($"//beacontower/{_options.ServiceName}", UriKind.RelativeOrAbsolute);
+        _source = new Uri($"//beacontower.cloud/{_options.ServiceName}", UriKind.RelativeOrAbsolute);
     }
 
     /// <inheritdoc />
@@ -126,7 +126,7 @@ public class CloudEventFactoryOptions
 {
     /// <summary>
     /// Gets or sets the service name used in the CloudEvent source URI.
-    /// Example: "device-api" results in source "//beacontower/device-api".
+    /// Example: "device-api" results in source "//beacontower.cloud/device-api".
     /// </summary>
     public string ServiceName { get; set; } = string.Empty;
 }

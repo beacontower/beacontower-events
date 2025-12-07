@@ -1,5 +1,10 @@
 # Progress Log
 
+## Session 2025-12-07T11:30:00Z
+- Completed: feat-003 (NATS CloudEvents Publishing) - All 87 tests passing
+- Next: feat-004 (NATS CloudEvents Subscription)
+- Notes: Implemented NatsCloudEventPublisher using Structured Content Mode with CloudNative.CloudEvents.SystemTextJson. Single NATS connection (thread-safe per NATS.Net v2 design). Polly for retry with exponential backoff. Fixed domain from com.beacontower to cloud.beacontower per beacontower.cloud domain. Integration tests with Testcontainers.Nats.
+
 ## Session 2025-12-07T09:30:00Z
 - Completed: feat-002 (In-Memory Implementation) - All 67 tests passing
 - Next: feat-003 (NATS CloudEvents Publishing)

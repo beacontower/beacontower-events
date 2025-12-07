@@ -45,7 +45,9 @@
       "id": "feat-003",
       "name": "NATS CloudEvents Publishing",
       "description": "Implement CloudEvents publishing with NATS JetStream following CloudEvents NATS Protocol Binding. Package: BeaconTower.Events.Nats",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T10:00:00Z",
+      "completedAt": "2025-12-07T11:30:00Z",
       "tests": [
         "NatsCloudEventPublisher implements ICloudEventPublisher",
         "PublishAsync sends CloudEvent to NATS JetStream in Structured Content Mode",

@@ -150,8 +150,8 @@ public class InMemoryCloudEventPublisherTests
             BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = id,
-            Source = new Uri("//beacontower/test", UriKind.RelativeOrAbsolute),
-            Type = "com.beacontower.test.created",
+            Source = new Uri("//beacontower.cloud/test", UriKind.RelativeOrAbsolute),
+            Type = "cloud.beacontower.test.created",
             Time = DateTimeOffset.UtcNow,
             DataContentType = "application/json",
             Data = new { Name = "Test" }

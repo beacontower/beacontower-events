@@ -19,6 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Testcontainers.Nats" />
   </ItemGroup>
 
   <ItemGroup>

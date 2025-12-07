@@ -31,9 +31,9 @@ public class CloudEventFactoryTests
 
         // Assert
         cloudEvent.Should().NotBeNull();
-        cloudEvent.Type.Should().Be("com.beacontower.device.created");
+        cloudEvent.Type.Should().Be("cloud.beacontower.device.created");
         cloudEvent.Source.Should().NotBeNull();
-        cloudEvent.Source!.ToString().Should().Be("//beacontower/device-api");
+        cloudEvent.Source!.ToString().Should().Be("//beacontower.cloud/device-api");
         cloudEvent.Subject.Should().Be(data.Id.ToString());
         cloudEvent.DataContentType.Should().Be("application/json");
         cloudEvent.Time.Should().NotBeNull();
@@ -122,7 +122,7 @@ public class CloudEventFactoryTests
     {
         // Arrange
         var data = new { Message = "User logged in" };
-        var customType = "com.beacontower.user.logged_in";
+        var customType = "cloud.beacontower.user.logged_in";
 
         // Act
         var cloudEvent = _factory.CreateEvent(

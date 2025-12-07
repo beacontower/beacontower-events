@@ -17,7 +17,7 @@ public class InMemoryCloudEventSubscriberTests
         TestData? receivedData = null;
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (cloudEvent, data, ct) =>
             {
                 receivedEvent = cloudEvent;
@@ -26,7 +26,7 @@ public class InMemoryCloudEventSubscriberTests
             });
 
         var cloudEvent = CreateTestCloudEvent(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             new TestData { Name = "Device1", Value = 42 });
 
         // Act
@@ -47,7 +47,7 @@ public class InMemoryCloudEventSubscriberTests
         var handlerCalled = false;
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (_, _, _) =>
             {
                 handlerCalled = true;
@@ -55,7 +55,7 @@ public class InMemoryCloudEventSubscriberTests
             });
 
         var cloudEvent = CreateTestCloudEvent(
-            "com.beacontower.device.deleted",
+            "cloud.beacontower.device.deleted",
             new TestData { Name = "Device1" });
 
         // Act
@@ -73,7 +73,7 @@ public class InMemoryCloudEventSubscriberTests
         var receivedTypes = new List<string>();
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.*.created",
+            "cloud.beacontower.*.created",
             (cloudEvent, _, _) =>
             {
                 receivedTypes.Add(cloudEvent.Type!);
@@ -81,15 +81,15 @@ public class InMemoryCloudEventSubscriberTests
             });
 
         // Act
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.device.created", new TestData()));
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.user.created", new TestData()));
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.device.deleted", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.device.created", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.user.created", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.device.deleted", new TestData()));
         await subscriber.DeliverAsync(CreateTestCloudEvent("com.other.device.created", new TestData()));
 
         // Assert - * matches single token
         receivedTypes.Should().HaveCount(2);
-        receivedTypes.Should().Contain("com.beacontower.device.created");
-        receivedTypes.Should().Contain("com.beacontower.user.created");
+        receivedTypes.Should().Contain("cloud.beacontower.device.created");
+        receivedTypes.Should().Contain("cloud.beacontower.user.created");
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class InMemoryCloudEventSubscriberTests
         var receivedTypes = new List<string>();
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.>",
+            "cloud.beacontower.>",
             (cloudEvent, _, _) =>
             {
                 receivedTypes.Add(cloudEvent.Type!);
@@ -108,16 +108,16 @@ public class InMemoryCloudEventSubscriberTests
             });
 
         // Act
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.device.created", new TestData()));
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.user.updated", new TestData()));
-        await subscriber.DeliverAsync(CreateTestCloudEvent("com.beacontower.sensor.data.telemetry", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.device.created", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.user.updated", new TestData()));
+        await subscriber.DeliverAsync(CreateTestCloudEvent("cloud.beacontower.sensor.data.telemetry", new TestData()));
         await subscriber.DeliverAsync(CreateTestCloudEvent("com.other.device.created", new TestData()));
 
         // Assert - > matches one or more tokens to end
         receivedTypes.Should().HaveCount(3);
-        receivedTypes.Should().Contain("com.beacontower.device.created");
-        receivedTypes.Should().Contain("com.beacontower.user.updated");
-        receivedTypes.Should().Contain("com.beacontower.sensor.data.telemetry");
+        receivedTypes.Should().Contain("cloud.beacontower.device.created");
+        receivedTypes.Should().Contain("cloud.beacontower.user.updated");
+        receivedTypes.Should().Contain("cloud.beacontower.sensor.data.telemetry");
     }
 
     [Fact]
@@ -127,10 +127,10 @@ public class InMemoryCloudEventSubscriberTests
         var subscriber = new InMemoryCloudEventSubscriber();
         var handler = new TestHandler();
 
-        await subscriber.SubscribeAsync("com.beacontower.device.created", handler);
+        await subscriber.SubscribeAsync("cloud.beacontower.device.created", handler);
 
         var cloudEvent = CreateTestCloudEvent(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             new TestData { Name = "TestDevice" });
 
         // Act
@@ -151,14 +151,14 @@ public class InMemoryCloudEventSubscriberTests
         var handler2CallCount = 0;
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (_, _, _) => { handler1CallCount++; return Task.CompletedTask; });
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (_, _, _) => { handler2CallCount++; return Task.CompletedTask; });
 
-        var cloudEvent = CreateTestCloudEvent("com.beacontower.device.created", new TestData());
+        var cloudEvent = CreateTestCloudEvent("cloud.beacontower.device.created", new TestData());
 
         // Act
         await subscriber.DeliverAsync(cloudEvent);
@@ -179,7 +179,7 @@ public class InMemoryCloudEventSubscriberTests
 
         // Act
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (_, _, _) =>
             {
                 handlerCalled = true;
@@ -189,7 +189,7 @@ public class InMemoryCloudEventSubscriberTests
         // Assert - Can use interface successfully
         var inMemorySubscriber = (InMemoryCloudEventSubscriber)subscriber;
         await inMemorySubscriber.DeliverAsync(
-            CreateTestCloudEvent("com.beacontower.device.created", new TestData()));
+            CreateTestCloudEvent("cloud.beacontower.device.created", new TestData()));
         handlerCalled.Should().BeTrue();
     }
 
@@ -201,7 +201,7 @@ public class InMemoryCloudEventSubscriberTests
         var handlerCalled = false;
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.device.created",
+            "cloud.beacontower.device.created",
             (_, _, _) =>
             {
                 handlerCalled = true;
@@ -211,7 +211,7 @@ public class InMemoryCloudEventSubscriberTests
         // Act
         subscriber.ClearSubscriptions();
         await subscriber.DeliverAsync(
-            CreateTestCloudEvent("com.beacontower.device.created", new TestData()));
+            CreateTestCloudEvent("cloud.beacontower.device.created", new TestData()));
 
         // Assert
         handlerCalled.Should().BeFalse();
@@ -238,7 +238,7 @@ public class InMemoryCloudEventSubscriberTests
 
         // Act & Assert
         FluentActions.Invoking(() => subscriber.SubscribeAsync<TestData>(
-                "com.beacontower.>",
+                "cloud.beacontower.>",
                 (Func<CloudEvent, TestData?, CancellationToken, Task>)null!))
             .Should().ThrowAsync<ArgumentNullException>();
     }
@@ -263,7 +263,7 @@ public class InMemoryCloudEventSubscriberTests
         var receivedEvents = new List<CloudEvent>();
 
         await subscriber.SubscribeAsync<TestData>(
-            "com.beacontower.>",
+            "cloud.beacontower.>",
             (cloudEvent, _, _) =>
             {
                 receivedEvents.Add(cloudEvent);
@@ -297,7 +297,7 @@ public class InMemoryCloudEventSubscriberTests
             BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = Guid.NewGuid().ToString(),
-            Source = new Uri("//beacontower/test", UriKind.RelativeOrAbsolute),
+            Source = new Uri("//beacontower.cloud/test", UriKind.RelativeOrAbsolute),
             Type = type,
             Time = DateTimeOffset.UtcNow,
             DataContentType = "application/json",

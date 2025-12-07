@@ -218,8 +218,8 @@ public class CloudEventExtensionsTests
             BeaconTowerCloudEventExtensionAttributes.AllAttributes)
         {
             Id = Guid.NewGuid().ToString(),
-            Source = new Uri("//beacontower/test", UriKind.RelativeOrAbsolute),
-            Type = "com.beacontower.test.created",
+            Source = new Uri("//beacontower.cloud/test", UriKind.RelativeOrAbsolute),
+            Type = "cloud.beacontower.test.created",
             Time = DateTimeOffset.UtcNow,
             DataContentType = "application/json"
         };
