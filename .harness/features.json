@@ -99,7 +99,9 @@
       "id": "feat-006",
       "name": "Observability",
       "description": "Structured logging, Prometheus metrics, and health checks for NATS connectivity.",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-07T14:00:00Z",
+      "completedAt": "2025-12-07T15:30:00Z",
       "tests": [
         "Publishing logs CloudEvent type and subject at Debug level",
         "Publishing logs correlationid for distributed tracing",

@@ -1,4 +1,5 @@
 using BeaconTower.Events.Abstractions;
+using BeaconTower.Events.Observability;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.SystemTextJson;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
     private readonly ResiliencePipeline _resiliencePipeline;
     private readonly NatsCloudEventPublisherOptions _options;
     private readonly ILogger<NatsCloudEventPublisher> _logger;
+    private readonly CloudEventsMetrics? _metrics;
     private readonly JsonEventFormatter _formatter;
     private bool _streamEnsured;
 
@@ -34,13 +36,15 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
     /// </summary>
     public NatsCloudEventPublisher(
         IOptions<NatsCloudEventPublisherOptions> options,
-        ILogger<NatsCloudEventPublisher> logger)
+        ILogger<NatsCloudEventPublisher> logger,
+        CloudEventsMetrics? metrics = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
 
         _options = options.Value;
         _logger = logger;
+        _metrics = metrics;
         _formatter = new JsonEventFormatter();
 
         // Create NATS connection
@@ -61,11 +65,7 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
                 UseJitter = true,
                 OnRetry = args =>
                 {
-                    _logger.LogWarning(
-                        args.Outcome.Exception,
-                        "Retry attempt {Attempt} for NATS publish after {Delay}ms",
-                        args.AttemptNumber,
-                        args.RetryDelay.TotalMilliseconds);
+                    Log.PublishRetry(_logger, args.Outcome.Exception, args.AttemptNumber, args.RetryDelay.TotalMilliseconds);
                     return ValueTask.CompletedTask;
                 }
             })
@@ -89,10 +89,10 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
             ["CloudEventId"] = cloudEvent.Id
         });
 
-        _logger.LogDebug(
-            "Publishing CloudEvent {Type} to subject {Subject}",
-            cloudEvent.Type,
-            subject);
+        var eventType = cloudEvent.Type ?? "unknown";
+        var eventId = cloudEvent.Id ?? "unknown";
+
+        Log.Publishing(_logger, eventType, subject);
 
         await _resiliencePipeline.ExecuteAsync(async token =>
         {
@@ -106,11 +106,10 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
 
             ack.EnsureSuccess();
 
-            _logger.LogDebug(
-                "Published CloudEvent {Id} to {Subject}, stream seq: {Seq}",
-                cloudEvent.Id,
-                subject,
-                ack.Seq);
+            // Record metric for successful publish
+            _metrics?.RecordEventPublished(eventType);
+
+            Log.Published(_logger, eventId, subject, ack.Seq);
         }, ct).ConfigureAwait(false);
     }
 
@@ -142,10 +141,7 @@ public sealed class NatsCloudEventPublisher : ICloudEventPublisher, IAsyncDispos
         }
         catch (NatsJSApiException ex) when (ex.Error.Code == 404)
         {
-            _logger.LogInformation(
-                "Creating JetStream stream {StreamName} with subjects {Subjects}",
-                _options.StreamName,
-                string.Join(", ", _options.StreamSubjects));
+            Log.CreatingStream(_logger, _options.StreamName, string.Join(", ", _options.StreamSubjects));
 
             var config = new StreamConfig(
                 _options.StreamName,

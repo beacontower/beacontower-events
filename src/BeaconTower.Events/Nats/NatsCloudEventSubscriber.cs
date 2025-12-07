@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using BeaconTower.Events.Abstractions;
+using BeaconTower.Events.Observability;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.SystemTextJson;
 using Microsoft.Extensions.Logging;
@@ -22,6 +24,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
     private readonly NatsJSContext _jetStream;
     private readonly NatsCloudEventSubscriberOptions _options;
     private readonly ILogger<NatsCloudEventSubscriber> _logger;
+    private readonly CloudEventsMetrics? _metrics;
     private readonly JsonEventFormatter _formatter;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _subscriptions = new();
@@ -33,13 +36,15 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
     /// </summary>
     public NatsCloudEventSubscriber(
         IOptions<NatsCloudEventSubscriberOptions> options,
-        ILogger<NatsCloudEventSubscriber> logger)
+        ILogger<NatsCloudEventSubscriber> logger,
+        CloudEventsMetrics? metrics = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
 
         _options = options.Value;
         _logger = logger;
+        _metrics = metrics;
         _formatter = new JsonEventFormatter();
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         _concurrencySemaphore = new SemaphoreSlim(_options.MaxConcurrency, _options.MaxConcurrency);
@@ -95,10 +100,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
         var natsSubject = ConvertPatternToNatsSubject(subjectPattern);
         var consumerName = GenerateConsumerName(subjectPattern);
 
-        _logger.LogInformation(
-            "Creating durable consumer {Consumer} for subject pattern {Pattern}",
-            consumerName,
-            natsSubject);
+        Log.CreatingDurableConsumer(_logger, consumerName, natsSubject);
 
         // Create durable consumer configuration
         var consumerConfig = new ConsumerConfig(consumerName)
@@ -120,9 +122,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
         }
         catch (NatsJSApiException ex) when (ex.Error.Code == 404)
         {
-            _logger.LogWarning(
-                "Stream {StreamName} not found. Creating it for subscriber.",
-                _options.StreamName);
+            Log.CreatingStream(_logger, _options.StreamName, "beacontower.>");
 
             var streamConfig = new StreamConfig(
                 _options.StreamName,
@@ -154,7 +154,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
         string subjectPattern,
         CancellationToken ct)
     {
-        _logger.LogDebug("Starting message processing loop for {Pattern}", subjectPattern);
+        Log.StartingProcessingLoop(_logger, subjectPattern);
 
         try
         {
@@ -169,15 +169,15 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            _logger.LogDebug("Message processing cancelled for {Pattern}", subjectPattern);
+            Log.ProcessingLoopCancelled(_logger, subjectPattern);
         }
         catch (NatsJSApiException ex)
         {
-            _logger.LogError(ex, "NATS API error in message processing loop for {Pattern}", subjectPattern);
+            Log.NatsApiError(_logger, ex, subjectPattern);
         }
         catch (NatsException ex)
         {
-            _logger.LogError(ex, "NATS error in message processing loop for {Pattern}", subjectPattern);
+            Log.NatsError(_logger, ex, subjectPattern);
         }
     }
 
@@ -202,45 +202,48 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
                     BeaconTowerCloudEventExtensionAttributes.AllAttributes);
 
                 correlationId = cloudEvent.GetCorrelationId();
+                var eventId = cloudEvent.Id ?? "unknown";
+                var eventType = cloudEvent.Type ?? "unknown";
 
                 using var scope = _logger.BeginScope(new Dictionary<string, object?>
                 {
                     ["CorrelationId"] = correlationId,
-                    ["CloudEventType"] = cloudEvent.Type,
-                    ["CloudEventId"] = cloudEvent.Id
+                    ["CloudEventType"] = eventType,
+                    ["CloudEventId"] = eventId
                 });
 
-                _logger.LogDebug(
-                    "Processing CloudEvent {Id} of type {Type}",
-                    cloudEvent.Id,
-                    cloudEvent.Type);
+                Log.Processing(_logger, eventId, eventType);
 
                 // Deserialize the data
                 var data = DeserializeData(cloudEvent, dataType);
 
-                // Execute the handler
+                // Execute the handler with timing
+                var stopwatch = CloudEventsMetrics.StartTimer();
                 await handler(cloudEvent, data, ct).ConfigureAwait(false);
+                stopwatch.Stop();
+
+                // Record success metrics and logging
+                var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+                _metrics?.RecordProcessingDuration(eventType, stopwatch.Elapsed, success: true);
+                Log.HandlerCompleted(_logger, eventId, durationMs);
 
                 // Success - ACK the message
                 await msg.AckAsync(cancellationToken: ct).ConfigureAwait(false);
-
-                _logger.LogDebug(
-                    "Successfully processed and ACKed CloudEvent {Id}",
-                    cloudEvent.Id);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Handler failed - check if we should route to DLQ
                 var metadata = msg.Metadata;
                 var deliveryCount = (int)(metadata?.NumDelivered ?? 1);
+                var eventId = cloudEvent?.Id ?? "unknown";
+                var eventType = cloudEvent?.Type ?? "unknown";
+
+                // Record failure metrics
+                _metrics?.RecordProcessingDuration(eventType, TimeSpan.Zero, success: false);
 
                 if (deliveryCount >= _options.MaxDeliveryAttempts)
                 {
-                    _logger.LogError(
-                        ex,
-                        "CloudEvent {Id} exceeded max delivery attempts ({Attempts}). Routing to DLQ.",
-                        cloudEvent?.Id ?? "unknown",
-                        _options.MaxDeliveryAttempts);
+                    Log.HandlerFailedRoutingToDlq(_logger, ex, eventId, _options.MaxDeliveryAttempts);
 
                     await RouteToDlqAsync(msg, cloudEvent, ex, ct).ConfigureAwait(false);
 
@@ -249,12 +252,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
                 }
                 else
                 {
-                    _logger.LogWarning(
-                        ex,
-                        "Handler failed for CloudEvent {Id}. Attempt {Attempt}/{Max}. NAKing for redelivery.",
-                        cloudEvent?.Id ?? "unknown",
-                        deliveryCount,
-                        _options.MaxDeliveryAttempts);
+                    Log.HandlerFailedWillRetry(_logger, ex, eventId, deliveryCount, _options.MaxDeliveryAttempts);
 
                     // NACK to trigger redelivery
                     await msg.NakAsync(cancellationToken: ct).ConfigureAwait(false);
@@ -275,6 +273,7 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
     {
         // Route to {subject}.dlq
         var dlqSubject = $"{msg.Subject}.dlq";
+        var eventId = cloudEvent?.Id ?? "unknown";
 
         try
         {
@@ -285,18 +284,11 @@ public sealed class NatsCloudEventSubscriber : ICloudEventSubscriber, IAsyncDisp
                 msg.Data ?? [],
                 cancellationToken: ct).ConfigureAwait(false);
 
-            _logger.LogInformation(
-                "Routed CloudEvent {Id} to DLQ subject {Subject}",
-                cloudEvent?.Id ?? "unknown",
-                dlqSubject);
+            Log.RoutedToDlq(_logger, eventId, dlqSubject);
         }
         catch (NatsException ex)
         {
-            _logger.LogError(
-                ex,
-                "Failed to route CloudEvent {Id} to DLQ {Subject}",
-                cloudEvent?.Id ?? "unknown",
-                dlqSubject);
+            Log.DlqRoutingFailed(_logger, ex, eventId, dlqSubject);
         }
     }
 

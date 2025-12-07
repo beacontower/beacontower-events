@@ -1,8 +1,11 @@
 using BeaconTower.Events.Abstractions;
 using BeaconTower.Events.InMemory;
 using BeaconTower.Events.Nats;
+using BeaconTower.Events.Observability;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace BeaconTower.Events.DependencyInjection;
 
@@ -136,5 +139,97 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICloudEventHandler<TData>, THandler>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers CloudEvents metrics for instrumentation.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCloudEventsMetrics(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddSingleton<CloudEventsMetrics>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the NATS health check with ASP.NET Core health checks.
+    /// </summary>
+    /// <param name="builder">The health checks builder.</param>
+    /// <param name="connectionString">The NATS connection string.</param>
+    /// <param name="name">The name of the health check (default: "nats").</param>
+    /// <param name="failureStatus">The failure status (default: Unhealthy).</param>
+    /// <param name="tags">Optional tags for the health check.</param>
+    /// <param name="timeout">Optional timeout override.</param>
+    /// <returns>The health checks builder for chaining.</returns>
+    public static IHealthChecksBuilder AddNatsHealthCheck(
+        this IHealthChecksBuilder builder,
+        string connectionString,
+        string name = "nats",
+        HealthStatus? failureStatus = null,
+        IEnumerable<string>? tags = null,
+        TimeSpan? timeout = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+
+        builder.Services.Configure<NatsHealthCheckOptions>(name, options =>
+        {
+            options.ConnectionString = connectionString;
+            if (timeout.HasValue)
+            {
+                options.Timeout = timeout.Value;
+            }
+        });
+
+        return builder.Add(new HealthCheckRegistration(
+            name,
+            sp =>
+            {
+                var options = new NatsHealthCheckOptions { ConnectionString = connectionString };
+                if (timeout.HasValue)
+                {
+                    options.Timeout = timeout.Value;
+                }
+                return new NatsHealthCheck(Microsoft.Extensions.Options.Options.Create(options));
+            },
+            failureStatus,
+            tags,
+            timeout));
+    }
+
+    /// <summary>
+    /// Registers the NATS health check using options from configuration.
+    /// </summary>
+    /// <param name="builder">The health checks builder.</param>
+    /// <param name="configureOptions">Action to configure health check options.</param>
+    /// <param name="name">The name of the health check (default: "nats").</param>
+    /// <param name="failureStatus">The failure status (default: Unhealthy).</param>
+    /// <param name="tags">Optional tags for the health check.</param>
+    /// <returns>The health checks builder for chaining.</returns>
+    public static IHealthChecksBuilder AddNatsHealthCheck(
+        this IHealthChecksBuilder builder,
+        Action<NatsHealthCheckOptions> configureOptions,
+        string name = "nats",
+        HealthStatus? failureStatus = null,
+        IEnumerable<string>? tags = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new NatsHealthCheckOptions();
+        configureOptions(options);
+
+        builder.Services.Configure(name, configureOptions);
+
+        return builder.Add(new HealthCheckRegistration(
+            name,
+            sp => new NatsHealthCheck(Microsoft.Extensions.Options.Options.Create(options)),
+            failureStatus,
+            tags,
+            options.Timeout));
     }
 }
