@@ -7,15 +7,19 @@
     <!-- NuGet Package Configuration -->
     <IsPackable>true</IsPackable>
     <PackageId>BeaconTower.Events</PackageId>
-    <Description>Event publishing and subscription library for BeaconTower microservices using NATS JetStream</Description>
+    <Description>CloudEvents-based event publishing and subscription library for BeaconTower microservices using NATS JetStream</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <!-- CloudEvents SDK Dependencies -->
+  <ItemGroup>
+    <PackageReference Include="CloudNative.CloudEvents" />
+    <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" />
+  </ItemGroup>
 
   <!-- Include README in package -->
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <!-- Uncomment and add icon.png to project root if you have one -->
-    <!-- <None Include="..\..\icon.png" Pack="true" PackagePath="\" /> -->
   </ItemGroup>
 
 </Project>

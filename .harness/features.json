@@ -10,7 +10,9 @@
       "id": "feat-001",
       "name": "CloudEvents Abstractions",
       "description": "Define CloudEvents-based interfaces and wrappers for event publishing and subscription. Package: BeaconTower.Events.Abstractions",
-      "status": "pending",
+      "status": "pass",
+      "startedAt": "2025-12-06T17:35:00Z",
+      "completedAt": "2025-12-06T18:15:00Z",
       "tests": [
         "ICloudEventPublisher interface defines PublishAsync(CloudEvent, CancellationToken) method",
         "ICloudEventSubscriber interface defines SubscribeAsync with subject pattern and handler",
