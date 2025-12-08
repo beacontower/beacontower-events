@@ -33,7 +33,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.0.1" />
-    <PackageVersion Include="Testcontainers.Nats" Version="4.4.0" />
+    <PackageVersion Include="Testcontainers.Nats" Version="4.9.0" />
 
     <!-- SourceLink -->
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
