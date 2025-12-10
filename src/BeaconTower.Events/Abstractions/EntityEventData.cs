@@ -45,3 +45,15 @@ public record EntityDeletedData<T>
     /// </summary>
     public required T Entity { get; init; }
 }
+
+/// <summary>
+/// Data payload for entity restored events (soft delete undelete).
+/// </summary>
+/// <typeparam name="T">The type of the entity.</typeparam>
+public record EntityRestoredData<T>
+{
+    /// <summary>
+    /// Gets or sets the restored entity.
+    /// </summary>
+    public required T Entity { get; init; }
+}
