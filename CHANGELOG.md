@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/beacontower/beacontower-events/compare/v0.3.1...v0.4.0) (2025-12-10)
+
+
+### Features
+
+* add EntityRestoredData<T> for soft delete restore events ([cb411c6](https://github.com/beacontower/beacontower-events/commit/cb411c6c78673630291bc4fe86db5314ef8685b2))
+
 ## [0.3.1](https://github.com/beacontower/beacontower-events/compare/v0.3.0...v0.3.1) (2025-12-07)
 
 
